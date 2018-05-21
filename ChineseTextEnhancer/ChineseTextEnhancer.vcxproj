@@ -74,7 +74,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\LIBS\TBB\tbb2017_20161004oss\include;C:\SVN\include;C:\LIBS\OPENCV\opencv3.4.1\opencv3.4.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\LIBS\TBB\tbb2017_20161004oss\include;C:\LIBS\OPENCV\opencv3.4.1\opencv3.4.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\LIBS\TBB\tbb2017_20161004oss\lib\intel64\vc14;C:\LIBS\OPENCV\opencv3.4.1\opencv3.4.1\x64\vc14\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -82,7 +82,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\LIBS\TBB\tbb2017_20161004oss\include;C:\SVN\include;C:\LIBS\OPENCV\opencv3.4.1\opencv3.4.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\LIBS\TBB\tbb2017_20161004oss\include;C:\LIBS\OPENCV\opencv3.4.1\opencv3.4.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\LIBS\TBB\tbb2017_20161004oss\lib\intel64\vc14;C:\LIBS\OPENCV\opencv3.4.1\opencv3.4.1\x64\vc14\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -152,13 +152,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\..\SVN\include\DeepCore\Misc\DeepSparse.cpp" />
     <ClCompile Include="..\..\SwallowSpeed2\SwallowSpeed2\PiCommon.cpp" />
+    <ClCompile Include="DeepSparse.cpp" />
+    <ClCompile Include="PiCommon.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\..\SVN\include\DeepCore\Misc\DeepSparse.h" />
     <ClInclude Include="..\..\SwallowSpeed2\SwallowSpeed2\PiCommon.h" />
+    <ClInclude Include="DeepSparse.h" />
+    <ClInclude Include="PiCommon.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

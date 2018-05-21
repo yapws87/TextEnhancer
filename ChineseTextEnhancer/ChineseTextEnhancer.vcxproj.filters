@@ -18,19 +18,25 @@
     <ClCompile Include="Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\..\SVN\include\DeepCore\Misc\DeepSparse.cpp">
+    <ClCompile Include="..\..\SwallowSpeed2\SwallowSpeed2\PiCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\SwallowSpeed2\SwallowSpeed2\PiCommon.cpp">
+    <ClCompile Include="DeepSparse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PiCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\..\SVN\include\DeepCore\Misc\DeepSparse.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\SwallowSpeed2\SwallowSpeed2\PiCommon.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DeepSparse.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PiCommon.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

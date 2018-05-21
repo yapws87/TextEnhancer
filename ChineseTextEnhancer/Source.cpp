@@ -6,13 +6,10 @@
 #include <opencv2\opencv.hpp>
 #include <opencv2\opencv_modules.hpp>
 
-#include <DeepCore\Utility\DPUtility.h>
-#include <DeepCore\Utility\DPUtility.cpp>
-
-#include <DeepCore/Misc/DeepSparse.h>
+#include "DeepSparse.h"
 
 
-dp::core::DPUtility m_util;
+
 int m_nDictionarySize = 0;
 CDeepSparse sc;
 int m_nStride = 0;
