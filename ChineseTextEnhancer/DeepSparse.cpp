@@ -78,12 +78,13 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount)
 
 
 	// Search loop
+	float bestError = FLT_MAX;
 	while (nSparseCount < nMaxSparseCount)
 	{
 
 		findBestAtom(matResidue, nBestDic, fBestCorr);
 		
-		sparse_vec.at<float>(nBestDic) += fBestCorr;
+		
 		//m_sparseData.at<float>(pin, nBestDic) += fBestCorr;
 		
 		// Reconstruct Local Patch
@@ -95,15 +96,15 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount)
 		cv::subtract(matResidue, local_reconstruct, matLocalResidue);
 
 		// Display
-		//cv::Mat matResidue_patch;
-		//cv::Mat matLocalResidue_patch;
-		//cv::Mat matReconstruct_patch;
-		//cv::Mat matDic_patch;
+		cv::Mat matResidue_patch;
+		cv::Mat matLocalResidue_patch;
+		cv::Mat matReconstruct_patch;
+		cv::Mat matDic_patch;
 
-		//matDic_patch = m_dictionary.row(nBestDic).reshape(1, 8);
-		//matReconstruct_patch = reconstruct.reshape(1, 8);
-		//matResidue_patch = matResidue.reshape(1, 8);
-		//matLocalResidue_patch = matLocalResidue.reshape(1, 8);
+		matDic_patch = m_dictionary.row(nBestDic).reshape(1, 8);
+		matReconstruct_patch = local_reconstruct.reshape(1, 8);
+		matResidue_patch = matResidue.reshape(1, 8);
+		matLocalResidue_patch = matLocalResidue.reshape(1, 8);
 		
 		//Check Error
 		cv::Mat matResidue_2;
@@ -114,7 +115,16 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount)
 		double err = sqrt(sResiSum.val[0]);
 
 		// Update residue
-		matLocalResidue.copyTo(matResidue);
+		if (err < bestError)
+		{
+			bestError = err;
+			sparse_vec.at<float>(nBestDic) += fBestCorr;
+			matLocalResidue.copyTo(matResidue);
+		}
+		else
+			break;
+		
+
 		
 		// Break Condition
 		if (err < 1e-10)
@@ -141,10 +151,9 @@ void CDeepSparse::MatchingPursuit(int nMaxSparseCount)
 	//tbb::mutex tbb_mutex;
 
 	// Loop through training patch
-	tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalPatch), [&](const tbb::blocked_range<size_t> &r)
-	{
-		for (int pin = (int)r.begin(); pin != (int)r.end(); pin++)
-		//for (int pin = 0; pin < nTotalPatch; pin++)
+	//tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalPatch), [&](const tbb::blocked_range<size_t> &r){
+		//for (int pin = (int)r.begin(); pin != (int)r.end(); pin++)
+		for (int pin = 0; pin < nTotalPatch; pin++)
 		{
 			cv::Mat local_sparse = deconstruction(m_trainData.row(pin), nMaxSparseCount);
 			
@@ -154,7 +163,7 @@ void CDeepSparse::MatchingPursuit(int nMaxSparseCount)
 		}
 
 		
-	});
+	//});
 
 	// Reconstruct
 	
