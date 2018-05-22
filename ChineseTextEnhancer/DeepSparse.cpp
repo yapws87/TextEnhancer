@@ -507,7 +507,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	int nWidth = matSrc.cols;
 	int nHeight = matSrc.rows;
 	int nFeatureSize = std::sqrt(m_dictionary.cols);
-	int nStride = 4;
+	int nStride = 2;
 
 	cv::Mat matDst = cv::Mat::zeros(matSrc.rows, matSrc.cols, CV_32F);
 	cv::Mat matDivisor = cv::Mat::zeros(matSrc.rows, matSrc.cols, CV_32F);
