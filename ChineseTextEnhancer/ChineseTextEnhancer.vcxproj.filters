@@ -18,9 +18,6 @@
     <ClCompile Include="Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\SwallowSpeed2\SwallowSpeed2\PiCommon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DeepSparse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -29,9 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\SwallowSpeed2\SwallowSpeed2\PiCommon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DeepSparse.h">
       <Filter>Source Files</Filter>
     </ClInclude>

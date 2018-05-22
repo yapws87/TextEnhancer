@@ -152,13 +152,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\SwallowSpeed2\SwallowSpeed2\PiCommon.cpp" />
     <ClCompile Include="DeepSparse.cpp" />
     <ClCompile Include="PiCommon.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\SwallowSpeed2\SwallowSpeed2\PiCommon.h" />
     <ClInclude Include="DeepSparse.h" />
     <ClInclude Include="PiCommon.h" />
   </ItemGroup>
