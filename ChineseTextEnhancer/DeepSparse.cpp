@@ -111,22 +111,23 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount)
 		cv::multiply(matLocalResidue, matLocalResidue, matResidue_2);
 		cv::Scalar sResiSum = cv::sum(matResidue_2);
 		
-		//Break if image is perfect
+		// Break Conditions
 		double err = sqrt(sResiSum.val[0]);
 
-		// Update residue
 		if (err < bestError)
 		{
 			bestError = err;
 			sparse_vec.at<float>(nBestDic) += fBestCorr;
-			matLocalResidue.copyTo(matResidue);
+			//matLocalResidue.copyTo(matResidue);
+			cv::normalize(matLocalResidue, matResidue, 1.0, 0.0, cv::NORM_L2);
 		}
 		else
 			break;
 		
 
 		
-		// Break Condition
+		
+		//Break if image is perfect
 		if (err < 1e-10)
 			break;
 		else
@@ -164,6 +165,7 @@ void CDeepSparse::MatchingPursuit(int nMaxSparseCount)
 
 		
 	//});
+
 
 	// Reconstruct
 	
