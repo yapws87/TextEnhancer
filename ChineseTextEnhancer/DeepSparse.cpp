@@ -152,9 +152,9 @@ void CDeepSparse::MatchingPursuit(int nMaxSparseCount)
 	//tbb::mutex tbb_mutex;
 
 	// Loop through training patch
-	//tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalPatch), [&](const tbb::blocked_range<size_t> &r){
-		//for (int pin = (int)r.begin(); pin != (int)r.end(); pin++)
-		for (int pin = 0; pin < nTotalPatch; pin++)
+	tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalPatch), [&](const tbb::blocked_range<size_t> &r){
+		for (int pin = (int)r.begin(); pin != (int)r.end(); pin++)
+		//for (int pin = 0; pin < nTotalPatch; pin++)
 		{
 			cv::Mat local_sparse = deconstruction(m_trainData.row(pin), nMaxSparseCount);
 			
@@ -164,7 +164,7 @@ void CDeepSparse::MatchingPursuit(int nMaxSparseCount)
 		}
 
 		
-	//});
+	});
 
 
 	// Reconstruct
