@@ -101,10 +101,10 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount)
 		cv::Mat matReconstruct_patch;
 		cv::Mat matDic_patch;
 
-		matDic_patch = m_dictionary.row(nBestDic).reshape(1, 8);
-		matReconstruct_patch = local_reconstruct.reshape(1, 8);
-		matResidue_patch = matResidue.reshape(1, 8);
-		matLocalResidue_patch = matLocalResidue.reshape(1, 8);
+		//matDic_patch = m_dictionary.row(nBestDic).reshape(1, 8);
+		//matReconstruct_patch = local_reconstruct.reshape(1, 8);
+		//matResidue_patch = matResidue.reshape(1, 8);
+		//matLocalResidue_patch = matLocalResidue.reshape(1, 8);
 		
 		//Check Error
 		cv::Mat matResidue_2;
@@ -116,10 +116,11 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount)
 
 		if (err < bestError)
 		{
-			bestError = err;
+			bestError = err * 2 ;
 			sparse_vec.at<float>(nBestDic) += fBestCorr;
 			//matLocalResidue.copyTo(matResidue);
 			cv::normalize(matLocalResidue, matResidue, 1.0, 0.0, cv::NORM_L2);
+			//cv::normalize(matLocalResidue, matResidue, 0.0, 1.0, cv::NORM_MINMAX);
 		}
 		else
 			break;
@@ -430,9 +431,9 @@ void CDeepSparse::ExtractTrainData()
 		int nTotalY = normTrainImage.rows - patchSize.height;
 		int nTotalX = normTrainImage.cols - patchSize.width;
 	
-		//tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalY), [&](const tbb::blocked_range<size_t> &r){
-			//for (int y = (int)r.begin(); y != (int)r.end(); y++)
-			for (int y = 0; y <nTotalY; y+= nStride)
+		tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalY), [&](const tbb::blocked_range<size_t> &r){
+			for (int y = (int)r.begin(); y != (int)r.end(); y++)
+			//for (int y = 0; y <nTotalY; y+= nStride)
 			{
 				if (y % nStride != 0)
 					continue;
@@ -465,7 +466,7 @@ void CDeepSparse::ExtractTrainData()
 				}
 
 			}
-		//});
+		});
 	}
 
 	//std::cout << "\r" << "\t Extracting data\t : \t" << "100%" << " [" << nCount << "] " << "\t";
