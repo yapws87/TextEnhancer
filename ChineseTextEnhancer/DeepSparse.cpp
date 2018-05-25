@@ -514,7 +514,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	int nWidth = matSrc.cols;
 	int nHeight = matSrc.rows;
 	int nFeatureSize = std::sqrt(m_dictionary.cols);
-	int nStride = 2;
+	int nStride = 1;
 
 	cv::Mat matDst = cv::Mat::zeros(matSrc.rows, matSrc.cols, CV_32F);
 	cv::Mat matDivisor = cv::Mat::zeros(matSrc.rows, matSrc.cols, CV_32F);
@@ -764,7 +764,7 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		//imwrite("best_feat" + std::to_string(i) + ".jpg", best_feat);
 
 		dTime = cv::getTickCount();
-		reconstruct(m_inputDataNorm(cv::Rect(0,0,800,600)), matReconstructed,nMaxSparse);
+		reconstruct(m_inputDataNorm(cv::Rect(200,200,400,300)), matReconstructed,nMaxSparse);
 		dTime = (cv::getTickCount() - dTime) / cv::getTickFrequency();
 		m_picom.printStdLog("\t Reconstruct Time :  \t" + std::to_string(dTime) + " sec");
 
