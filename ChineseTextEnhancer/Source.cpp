@@ -7,11 +7,12 @@
 #include <opencv2\opencv_modules.hpp>
 
 #include "DeepSparse.h"
-
+#include "TextExtractor.h"
 
 
 int m_nDictionarySize = 0;
 CDeepSparse sc;
+TextExtractor tx;
 int m_nStride = 0;
 int m_nTrainLoop = 1;
 int m_nMaxSparse = 1;
@@ -106,6 +107,9 @@ void main(int argc, const char** argv)
 	// Load Data
 	cv::Mat matInverse;
 	cv::bitwise_not(matSrc, matInverse);
+
+	//tx.blobDetection(matInverse);
+
 
 	std::cout << "\t Extracting data\t : \t";
 	cv::Mat matInverseLarge;

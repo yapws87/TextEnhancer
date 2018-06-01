@@ -76,6 +76,8 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount)
 	int nTotalWords = m_dictionary.rows;
 	cv::Mat sparse_vec = cv::Mat::zeros(1, nTotalWords, CV_32FC1);
 
+	std::vector<int> sparse_index;
+	cv::Mat matBestDics;
 
 	// Search loop
 	float bestError = FLT_MAX;
@@ -114,19 +116,30 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount)
 		// Break Conditions
 		double err = sqrt(sResiSum.val[0]);
 
-		if (err < bestError)
+		//if (err < bestError)
 		{
 			bestError = err;
 			sparse_vec.at<float>(nBestDic) += fBestCorr;
 			matLocalResidue.copyTo(matResidue);
+			
+			// Check for repeated feature
+			bool bNewDic = true;
+			for (int i = 0; i < sparse_index.size(); i++)
+			{
+				if (nBestDic  == sparse_index[i])
+					bNewDic = false;
+			}
+
+			// if new add to vector
+			if (bNewDic) {
+				matBestDics.push_back(m_dictionary.row(nBestDic));
+				sparse_index.push_back(nBestDic);
+			}
 			//cv::normalize(matLocalResidue, matResidue, 1.0, 0.0, cv::NORM_L2);
 			//cv::normalize(matLocalResidue, matResidue, 0.0, 1.0, cv::NORM_MINMAX);
 		}
-		else
-			break;
-		
-
-		
+		//else
+		//	break;
 		
 		//Break if image is perfect
 		if (err < 1e-10)
@@ -137,6 +150,21 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount)
 
 	}//while ()
 
+	matSrc.convertTo(matResidue, CV_32F);
+	// Calculate inverse to obtain better weights
+	cv::SVD svd_result(matBestDics.t());
+
+	cv::Mat newWeights;
+	svd_result.backSubst(matResidue.t(), newWeights);
+
+	// REplace the values in sparse matrix
+	for(int i = 0; i < sparse_index.size(); i++)
+	{
+		sparse_vec.at<float> (sparse_index[i]) = newWeights.at<float>(i);
+	}
+
+	cv::Mat recons;
+	recons = matBestDics.t() * newWeights;
 	//cv::normalize(sparse_vec, sparse_vec, 1.f, 0.f, cv::NORM_L2);
 	//cv::normalize(sparse_vec, sparse_vec, -1, 1, cv::NORM_MINMAX);
 	return sparse_vec;
@@ -283,7 +311,7 @@ void CDeepSparse::K_SVD()
 			cv::Mat relatedTrain;
 			cv::Mat relatedSparse;
 		
-			// Scan through every train patch
+			// Scan through every train patch tat is related to dictionary
 			for (int tin = 0; tin < nTotalTrain; tin++)
 			{
 				cv::Mat matCleanTrain;
@@ -305,11 +333,11 @@ void CDeepSparse::K_SVD()
 							cv::Mat local_reconstruct;
 							cv::multiply(m_dictionary.row(sin), fSparse_weight, local_reconstruct);
 
-
-							cv::Mat matLocalResidue;
 							cv::subtract(matCleanTrain, local_reconstruct, matCleanTrain);
 						}
 					}
+					cv::divide(matCleanTrain, m_sparseData.at<float>(tin, din), matCleanTrain);
+					cv::normalize(matCleanTrain, matCleanTrain, 1.f, 0.f, cv::NORM_L2);
 					relatedTrain.push_back(matCleanTrain);
 				}
 			}
@@ -763,15 +791,16 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		//cv::Mat best_feat = getBestFeatures(nSaveFeatureCount);
 		//imwrite("best_feat" + std::to_string(i) + ".jpg", best_feat);
 
+		cv::Rect teaserRect(200, 200, 400, 300);
 		dTime = cv::getTickCount();
-		reconstruct(m_inputDataNorm(cv::Rect(200,200,400,300)), matReconstructed,nMaxSparse);
+		reconstruct(m_inputDataNorm(teaserRect), matReconstructed,nMaxSparse);
 		dTime = (cv::getTickCount() - dTime) / cv::getTickFrequency();
 		m_picom.printStdLog("\t Reconstruct Time :  \t" + std::to_string(dTime) + " sec");
 
 		// Find Error
 		cv::Mat matAbsDiff, matAbsDiffShow;
-		cv::absdiff(m_inputData8Bit(cv::Rect(0, 0, 800, 600)), matReconstructed, matAbsDiff);
-		int nNonZero = cv::countNonZero(m_inputData8Bit(cv::Rect(0, 0, 800, 600)));
+		cv::absdiff(m_inputData8Bit(teaserRect), matReconstructed, matAbsDiff);
+		int nNonZero = cv::countNonZero(m_inputData8Bit(teaserRect));
 		
 		m_picom.printStdLog("\t Reconstruction Error :  \t" + std::to_string(cv::sum(matAbsDiff)[0] / (float)(nNonZero)) + " %");
 		cv::normalize(matAbsDiff, matAbsDiffShow, 0, 255, cv::NORM_MINMAX, CV_8UC1);
