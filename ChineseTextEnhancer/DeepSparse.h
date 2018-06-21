@@ -76,6 +76,7 @@ public:
 	cv::Mat GetTrainData(void) { return m_trainData; }
 
 	void SetRandomDictionary(int nDicLength);
+	void SetFromPathDictionary(std::string dic_path, int nDicLength);
 	void SetDictionary(cv::Mat matDic);
 	cv::Mat GetDictionary(void) { return m_dictionary; }
 

@@ -18,6 +18,8 @@ int m_nTrainLoop = 1;
 int m_nMaxSparse = 1;
 float m_fSizeUp = 3;
 int m_nFeaturePatch = 12;
+cv::Rect m_srcROI;
+bool m_bInitFromDic = false;
 
 cv::Mat image_enhancer(cv::Mat matSrc)
 {
@@ -79,6 +81,11 @@ void main(int argc, const char** argv)
 	m_nMaxSparse = atoi(argv[++nArgIdx]);
 	m_nFeaturePatch = atoi(argv[++nArgIdx]);
 	m_fSizeUp = atof(argv[++nArgIdx]);
+	m_srcROI.x = atoi(argv[++nArgIdx]);
+	m_srcROI.y = atoi(argv[++nArgIdx]);
+	m_srcROI.width = atoi(argv[++nArgIdx]);
+	m_srcROI.height = atoi(argv[++nArgIdx]);
+	m_bInitFromDic = std::string(argv[++nArgIdx]).compare("TRUE") ? false : true;
 
 
 	// Show parameters
@@ -94,13 +101,28 @@ void main(int argc, const char** argv)
 	std::cout << "\t" << "m_nMaxSparse" << "\t: " << m_nMaxSparse << std::endl;
 	std::cout << "\t" << "m_nFeaturePatch" << "\t: " << m_nFeaturePatch << std::endl;
 	std::cout << "\t" << "m_fSizeUp" << "\t: " << m_fSizeUp << std::endl;
+
+	std::cout << "\t" << "m_srcROI" << "\t: " << m_srcROI.x
+		<< " " << m_srcROI.y
+		<< " " << m_srcROI.width
+		<< " " << m_srcROI.height << std::endl;
+
+	std::cout << "\t" << "m_bInitFromDic" << "\t: " << m_bInitFromDic << std::endl;
 	std::cout << std::endl;
 
 
 	initScreen();
 
 	std::cout << "\t Load Image\t : \t" << image_path << "\t";
-	cv::Mat matSrc = cv::imread(image_path,0);
+	
+	// Load image from PC
+	cv::Mat matSrc_ori = cv::imread(image_path,0);
+	cv::Mat matSrc;
+	if(m_srcROI.area() > 0)
+		matSrc_ori(m_srcROI).copyTo(matSrc);
+	else
+		matSrc_ori.copyTo(matSrc);
+
 	std::cout << "\t[DONE]" << std::endl;
 	
 
@@ -114,8 +136,7 @@ void main(int argc, const char** argv)
 	std::cout << "\t Extracting data\t : \t";
 	cv::Mat matInverseLarge;
 	cv::resize(matInverse, matInverseLarge, cv::Size(0, 0), m_fSizeUp, m_fSizeUp);
-
-	
+		
 	sc.SetParam(matInverseLarge, m_nDictionarySize, m_nStride, m_nFeaturePatch);
 
 
@@ -124,9 +145,18 @@ void main(int argc, const char** argv)
 		sc.ExtractTrainData();
 		std::cout << "[DONE]" << std::endl;
 
-		std::cout << "\t Set random data\t : \t";
-		sc.SetRandomDictionary(m_nDictionarySize);
-		std::cout << "[DONE]" << std::endl;
+		if (!m_bInitFromDic) {
+			std::cout << "\t Set random data\t : \t";
+			sc.SetRandomDictionary(m_nDictionarySize);
+			std::cout << "[DONE]" << std::endl;
+		}
+		else {
+			std::cout << "\t Set dic data from file\t : \t";
+			sc.SetFromPathDictionary(dic_path, m_nDictionarySize);
+			std::cout << "[DONE]" << std::endl;
+		}
+			
+		
 
 		std::cout << "\t Start Training\t : ";
 		sc.Train(m_nTrainLoop, m_nMaxSparse);

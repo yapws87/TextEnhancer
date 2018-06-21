@@ -27,6 +27,41 @@ void CDeepSparse::SetRandomDictionary(int nDicLength)
 	}
 }
 
+void CDeepSparse::SetFromPathDictionary(std::string dic_path, int nDicLength)
+{
+	if (m_trainData.empty()) {
+		return;
+	}
+
+	if (m_trainData.rows < nDicLength) {
+		nDicLength = m_trainData.rows;
+	}
+
+	int nTotalElement = m_trainData.rows;
+
+	loadDictionary(dic_path);
+	
+	if (m_dictionary.rows < nDicLength)
+	{
+		int nIdx;
+		SetRandomRange(0, nTotalElement);
+		for (int rin = m_dictionary.rows - 1; rin < nDicLength; rin++)
+		{
+			// Get non-repeat random value
+			nIdx = GetRandomIndex_nonRepeat();
+
+			// Push back random dictionary data
+			cv::Mat patchFlat = m_trainData.row(nIdx).reshape(1, 1);
+			m_dictionary.push_back(patchFlat);
+		}
+	}
+	else if(m_dictionary.rows > nDicLength) 
+	{
+		m_dictionary(cv::Rect(0, 0, m_dictionary.cols, nDicLength)).copyTo(m_dictionary);
+	}
+	
+}
+
 bool CDeepSparse::findBestAtom(cv::Mat matPatch, int &_nBestDic, float &_fBestDicCorr )
 {
 	int nTotalDic = m_dictionary.rows;
