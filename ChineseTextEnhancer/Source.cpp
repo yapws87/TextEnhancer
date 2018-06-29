@@ -111,6 +111,13 @@ void main(int argc, const char** argv)
 	std::cout << std::endl;
 
 
+	// Extract filename
+	unsigned int found = image_path.find_last_of("/\\");
+	std::string histo_filename = image_path.substr(found + 1);
+	found = histo_filename.find_last_of(".");
+	histo_filename = histo_filename.substr(0, found);
+
+
 	initScreen();
 
 	std::cout << "\t Load Image\t : \t" << image_path << "\t";
@@ -178,6 +185,7 @@ void main(int argc, const char** argv)
 
 	std::cout << "\t Reconstructing..\t : \t";
 	cv::Mat matResult = sc.reconstruct_full(m_nMaxSparse);
+	sc.saveHistogram(histo_filename);
 	cv::Mat matResultOriSize;
 	cv::resize(matResult, matResultOriSize, cv::Size(0, 0), 1 / m_fSizeUp, 1 / m_fSizeUp);
 	//cv::threshold(matResultOriSize, matResultOriSize, 200, 255, cv::THRESH_BINARY);

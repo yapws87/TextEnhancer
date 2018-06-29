@@ -37,7 +37,7 @@ private:
 
 	//Matching pursuit
 	void MatchingPursuit(int nMaxSparseCount);
-	cv::Mat deconstruction(cv::Mat matSrc, int nMaxSparseCount);
+	cv::Mat deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nSparseIndex);
 	bool findBestAtom(cv::Mat matPatch, int &_nBestDic, float &_fBestDicCorr);
 
 	//Reconstruction
@@ -55,7 +55,7 @@ private:
 	// Analysis
 	cv::Mat sort_sparsemat(cv::Mat matSparsemat);
 
-
+	std::vector<int> m_sparse_combi_histo;
 
 public:
 	CDeepSparse();
@@ -70,6 +70,7 @@ public:
 
 		matSrc.convertTo(m_inputDataNorm, CV_32F, 1 / 255.f);
 		matSrc.copyTo(m_inputData8Bit);
+		
 	}
 	
 	void ExtractTrainData();
@@ -85,5 +86,6 @@ public:
 	cv::Mat reconstruct_full( int nMaxSparse);
 	bool loadDictionary(std::string dic_string);
 	bool saveDictionary(std::string dic_string);
+	bool saveHistogram(std::string histo_string);
 
 };
