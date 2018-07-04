@@ -157,7 +157,7 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 			sparse_vec.at<float>(nBestDic) += fBestCorr;
 			matLocalResidue.copyTo(matResidue);
 
-			nSparseIndex += nBestDic + nSparseCount * nTotalWords;
+			
 			
 			// Check for repeated feature
 			bool bNewDic = true;
@@ -202,6 +202,21 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 
 	cv::Mat recons;
 	recons = matBestDics.t() * newWeights;
+
+
+	// Calculate sparse index
+	long lSections = 0;
+	for (int i = 0; i < sparse_vec.cols * sparse_vec.rows; i++)
+	{
+		int nbest = sparse_vec.at<int>(i);
+		nSparseIndex += nbest + lSections;
+		
+		if (i == 0)
+			lSections = 1;
+
+		lSections = lSections * nTotalWords;
+	}
+	
 	//cv::normalize(sparse_vec, sparse_vec, 1.f, 0.f, cv::NORM_L2);
 	//cv::normalize(sparse_vec, sparse_vec, -1, 1, cv::NORM_MINMAX);
 	return sparse_vec;
@@ -229,7 +244,6 @@ void CDeepSparse::MatchingPursuit(int nMaxSparseCount)
 			cv::Mat local_sparse = deconstruction(m_trainData.row(pin), nMaxSparseCount, nSparseIdx);
 			
 			local_sparse.copyTo(m_sparseData.row(pin));
-
 
 		}
 
@@ -571,16 +585,21 @@ void CDeepSparse::ExtractTrainData()
 	std::cout << "\r" << "\t Extracting data\t : \t" << std::setprecision(3) << "100 %";
 }
 
+void CDeepSparse::initHisto()
+{
+	m_sparse_combi_histo.clearData();
+}
+void CDeepSparse::insertHisto(int id)
+{
+	m_sparse_combi_histo.insertData(id);
+}
+
 void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nMaxSparseCount)
 {
 	cv::Mat matSrc;
 	_matSrc.copyTo(matSrc);
 
-	// Init histogram
-	int nTotalBin = std::pow(m_nDictionarySize, nMaxSparseCount);
-	m_sparse_combi_histo.clear();
-	m_sparse_combi_histo.assign(nTotalBin, 0);
-
+	initHisto();
 
 
 	int nWidth = matSrc.cols;
@@ -626,9 +645,10 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 			
 				
 				tbb_mutex.lock();
+				insertHisto(nSparseIdx);
 				matDst(roi) = (matDst(roi) + matReconstruct.reshape(1, nFeatureSize));
 				matDivisor(roi) = matDivisor(roi) + cv::Mat::ones(roi.height, roi.width, CV_32F);
-				m_sparse_combi_histo[nSparseIdx]++;
+			
 				//cv::multiply(matReconstruct.reshape(1, nFeatureSize), matDst(roi), matDst(roi));
 				tbb_mutex.unlock();
 
@@ -842,6 +862,7 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		//imwrite("best_feat" + std::to_string(i) + ".jpg", best_feat);
 
 		cv::Rect teaserRect(200, 200, 400, 300);
+		teaserRect = teaserRect & cv::Rect(0, 0, m_inputDataNorm.cols, m_inputDataNorm.rows);
 		dTime = cv::getTickCount();
 		reconstruct(m_inputDataNorm(teaserRect), matReconstructed,nMaxSparse);
 		dTime = (cv::getTickCount() - dTime) / cv::getTickFrequency();
@@ -922,12 +943,12 @@ bool CDeepSparse::saveDictionary(std::string dic_string)
 bool CDeepSparse::saveHistogram(std::string histo_string)
 {
 	// Saves the Histogram
-	cv::Mat matHisto(m_sparse_combi_histo);
+	cv::Mat matHisto = m_sparse_combi_histo.getData();
 	std::string histoName = histo_string + "_D" + std::to_string(m_nDictionarySize) + "_F" + std::to_string(m_featurePatchSize.width) + "_hist.xml";
 	cv::FileStorage fs(histoName, cv::FileStorage::WRITE);
 	if (fs.isOpened())
 	{
-		fs << "matHisto" << m_sparse_combi_histo;
+		fs << "matHisto" << matHisto;
 		std::cout << "Saved Histo" << std::endl;
 		fs.release();
 		return true;

@@ -8,6 +8,54 @@
 #include "tbb/parallel_for.h"
 #include "tbb/blocked_range.h"
 
+
+
+struct SparseHisto{
+	cv::Mat data;
+	
+	SparseHisto() {
+
+	}
+	SparseHisto(long id)
+	{
+
+		cv::Mat localData = (cv::Mat_<int>(1, 2) << id, 0);
+		if (data.empty()){
+			localData.copyTo(data);
+		}
+		else{
+			data.push_back(localData);
+		}
+	}
+	~SparseHisto() {}
+
+	void insertData(long id)
+	{
+		bool bFound = false;
+		for (int i = 0; i < data.rows; i++)
+		{
+			if (id == data.at<int>(i, 0))
+			{
+				data.at<int>(i, 1)++;
+				bFound = true;
+				break;
+			}
+		}
+
+		if (!bFound) {
+			cv::Mat tempMat = (cv::Mat_<int>(1, 2) << id, 0);
+			data.push_back(tempMat);
+		}
+			
+	}
+
+	cv::Mat getData() { return data; }
+	void clearData() {
+		if(!data.empty())
+			data.release();
+	}
+
+};
 class CDeepSparse
 {
 private:
@@ -55,7 +103,7 @@ private:
 	// Analysis
 	cv::Mat sort_sparsemat(cv::Mat matSparsemat);
 
-	std::vector<int> m_sparse_combi_histo;
+	SparseHisto m_sparse_combi_histo;
 
 public:
 	CDeepSparse();
@@ -74,6 +122,8 @@ public:
 	}
 	
 	void ExtractTrainData();
+	void initHisto();
+	void insertHisto(int id);
 	cv::Mat GetTrainData(void) { return m_trainData; }
 
 	void SetRandomDictionary(int nDicLength);
