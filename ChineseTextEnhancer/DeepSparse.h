@@ -16,7 +16,7 @@ struct SparseHisto{
 	SparseHisto() {
 
 	}
-	SparseHisto(long id)
+	SparseHisto(int id)
 	{
 
 		cv::Mat localData = (cv::Mat_<int>(1, 2) << id, 0);
@@ -29,21 +29,21 @@ struct SparseHisto{
 	}
 	~SparseHisto() {}
 
-	void insertData(long id)
+	void insertData(int id)
 	{
 		bool bFound = false;
 		for (int i = 0; i < data.rows; i++)
 		{
 			if (id == data.at<int>(i, 0))
 			{
-				data.at<int>(i, 1)++;
+				data.at<int>(i, 1) = data.at<int>(i, 1) + 1;
 				bFound = true;
 				break;
 			}
 		}
 
 		if (!bFound) {
-			cv::Mat tempMat = (cv::Mat_<int>(1, 2) << id, 0);
+			cv::Mat tempMat = (cv::Mat_<int>(1, 2) << (int)id, 0);
 			data.push_back(tempMat);
 		}
 			

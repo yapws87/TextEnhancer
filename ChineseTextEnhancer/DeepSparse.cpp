@@ -206,10 +206,9 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 
 	// Calculate sparse index
 	long lSections = 0;
-	for (int i = 0; i < sparse_vec.cols * sparse_vec.rows; i++)
+	for (int i = 0; i < sparse_index.size(); i++)
 	{
-		int nbest = sparse_vec.at<int>(i);
-		nSparseIndex += nbest + lSections;
+		nSparseIndex += sparse_index[i] + lSections;
 		
 		if (i == 0)
 			lSections = 1;
