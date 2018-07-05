@@ -973,8 +973,13 @@ bool CDeepSparse::saveHistogram(std::string folderPath, std::string histo_string
 	std::cout << "Writing images" << std::endl;
 	for(int i = 0; i < sampleImgs.size(); i++)
 	{
-		std::string imgName = "img_" + std::to_string(matHisto.at<int>(i, 0)) + ".jpg";
-		cv::imwrite(imgName, sampleImgs[i]);
+		std::string imgName = image_folder + "\\img_" + std::to_string(matHisto.at<int>(i, 0)) + ".jpg";
+
+		cv::Mat matSave;
+		cv::normalize(sampleImgs[i], matSave, 0, 255, cv::NORM_MINMAX);
+		matSave.convertTo(matSave, CV_8UC1);
+		cv::resize(matSave, matSave, cv::Size(0, 0), 3, 3, cv::INTER_NEAREST);
+		cv::imwrite(imgName, matSave);
 	}
 	std::cout << "Image writing complete" << std::endl;
 
