@@ -185,7 +185,7 @@ void main(int argc, const char** argv)
 
 	std::cout << "\t Reconstructing..\t : \t";
 	cv::Mat matResult = sc.reconstruct_full(m_nMaxSparse);
-	sc.saveHistogram(histo_filename);
+	sc.saveHistogram(dst_folder, histo_filename);
 	cv::Mat matResultOriSize;
 	cv::resize(matResult, matResultOriSize, cv::Size(0, 0), 1 / m_fSizeUp, 1 / m_fSizeUp);
 	//cv::threshold(matResultOriSize, matResultOriSize, 200, 255, cv::THRESH_BINARY);
