@@ -967,7 +967,7 @@ bool CDeepSparse::saveHistogram(std::string folderPath, std::string histo_string
 
 	std::vector<cv::Mat> sampleImgs = m_sparse_combi_histo.getSamplesImages();
 	// Saves sample images
-	std::string image_folder = folderPath + "\\sample_images";
+	std::string image_folder = folderPath + "\\sample_images" + histo_string;
 	_mkdir(image_folder.c_str());
 
 	std::cout << "Writing images" << std::endl;
