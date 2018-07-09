@@ -1,5 +1,6 @@
 #include "DeepSparse.h"
 #include <time.h>
+#include <direct.h>
 
 void CDeepSparse::SetRandomDictionary(int nDicLength)
 {
@@ -588,9 +589,9 @@ void CDeepSparse::initHisto()
 {
 	m_sparse_combi_histo.clearData();
 }
-void CDeepSparse::insertHisto(int id)
+void CDeepSparse::insertHisto(int id, cv::Mat matSample)
 {
-	m_sparse_combi_histo.insertData(id);
+	m_sparse_combi_histo.insertData(id, matSample);
 }
 
 void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nMaxSparseCount)
@@ -644,7 +645,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 			
 				
 				tbb_mutex.lock();
-				insertHisto(nSparseIdx);
+				insertHisto(nSparseIdx, matPatch);
 				matDst(roi) = (matDst(roi) + matReconstruct.reshape(1, nFeatureSize));
 				matDivisor(roi) = matDivisor(roi) + cv::Mat::ones(roi.height, roi.width, CV_32F);
 			
@@ -939,20 +940,52 @@ bool CDeepSparse::saveDictionary(std::string dic_string)
 
 }
 
-bool CDeepSparse::saveHistogram(std::string histo_string)
+bool CDeepSparse::saveHistogram(std::string folderPath, std::string histo_string)
 {
 	// Saves the Histogram
+	m_sparse_combi_histo.sortData();
+	
+
 	cv::Mat matHisto = m_sparse_combi_histo.getData();
-	std::string histoName = histo_string + "_D" + std::to_string(m_nDictionarySize) + "_F" + std::to_string(m_featurePatchSize.width) + "_hist.xml";
+	std::string histoName = folderPath + "\\" +histo_string + "_D" + std::to_string(m_nDictionarySize) + "_F" + std::to_string(m_featurePatchSize.width) + "_hist.xml";
 	cv::FileStorage fs(histoName, cv::FileStorage::WRITE);
+	
+	bool bPass_flag = false;
+
+	//Saves histogram
+
 	if (fs.isOpened())
 	{
+		std::cout << "Saving histogram" << std::endl;
 		fs << "matHisto" << matHisto;
 		std::cout << "Saved Histo" << std::endl;
 		fs.release();
-		return true;
+
+		bPass_flag = true;
 	}
-	return false;
+
+
+	std::vector<cv::Mat> sampleImgs = m_sparse_combi_histo.getSamplesImages();
+	// Saves sample images
+	std::string image_folder = folderPath + "\\sample_images" + histo_string;
+	_mkdir(image_folder.c_str());
+
+	std::cout << "Writing images" << std::endl;
+	for(int i = 0; i < sampleImgs.size(); i++)
+	{
+		std::string imgName = image_folder + "\\img_" + std::to_string(matHisto.at<int>(i, 0)) + ".jpg";
+
+		cv::Mat matSave;
+		cv::normalize(sampleImgs[i], matSave, 0, 255, cv::NORM_MINMAX);
+		matSave.convertTo(matSave, CV_8UC1);
+		cv::resize(matSave, matSave, cv::Size(0, 0), 3, 3, cv::INTER_NEAREST);
+		cv::imwrite(imgName, matSave);
+	}
+	std::cout << "Image writing complete" << std::endl;
+
+
+	return bPass_flag;
+	
 }
 
 

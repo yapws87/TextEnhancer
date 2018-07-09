@@ -10,26 +10,30 @@
 
 
 
-struct SparseHisto{
+struct SparseHisto {
 	cv::Mat data;
-	
+	std::vector<cv::Mat> sample_imgs;
 	SparseHisto() {
 
 	}
-	SparseHisto(int id)
+	SparseHisto(int id, cv::Mat &matSample)
 	{
-
+		sample_imgs.clear();
 		cv::Mat localData = (cv::Mat_<int>(1, 2) << id, 0);
-		if (data.empty()){
+
+
+		if (data.empty()) {
 			localData.copyTo(data);
 		}
-		else{
+		else {
 			data.push_back(localData);
 		}
+		sample_imgs.push_back(matSample);
+
 	}
 	~SparseHisto() {}
 
-	void insertData(int id)
+	void insertData(int id, cv::Mat &matSample)
 	{
 		bool bFound = false;
 		for (int i = 0; i < data.rows; i++)
@@ -38,6 +42,7 @@ struct SparseHisto{
 			{
 				data.at<int>(i, 1) = data.at<int>(i, 1) + 1;
 				bFound = true;
+				cv::add(sample_imgs[i] * 0.5, matSample*(0.5), sample_imgs[i]);
 				break;
 			}
 		}
@@ -45,14 +50,36 @@ struct SparseHisto{
 		if (!bFound) {
 			cv::Mat tempMat = (cv::Mat_<int>(1, 2) << (int)id, 0);
 			data.push_back(tempMat);
+			sample_imgs.push_back(matSample);
 		}
-			
+
 	}
 
 	cv::Mat getData() { return data; }
+	std::vector<cv::Mat> getSamplesImages() { return sample_imgs; }
+	
 	void clearData() {
 		if(!data.empty())
 			data.release();
+	}
+
+	void sortData() {
+		// Sort to get the sorted index
+		cv::Mat sorted_idx;
+		cv::sortIdx(data.col(1), sorted_idx, cv::SORT_EVERY_COLUMN + cv::SORT_DESCENDING);
+
+		cv::Mat sortedData(data.size(),data.type());
+		std::vector<cv::Mat> sortedSamples;
+		sortedSamples.assign(sample_imgs.size(), cv::Mat());
+
+		// Real moving of objects
+		for (int i = 0; i < sorted_idx.total(); i++)
+		{
+			int idx = sorted_idx.at<int>(i);
+			data.row(idx).copyTo(sortedData.row(i));
+			sample_imgs[idx].copyTo(sortedSamples[i]);
+		}		
+
 	}
 
 };
@@ -123,7 +150,7 @@ public:
 	
 	void ExtractTrainData();
 	void initHisto();
-	void insertHisto(int id);
+	void insertHisto(int id, cv::Mat matSample);
 	cv::Mat GetTrainData(void) { return m_trainData; }
 
 	void SetRandomDictionary(int nDicLength);
@@ -136,6 +163,6 @@ public:
 	cv::Mat reconstruct_full( int nMaxSparse);
 	bool loadDictionary(std::string dic_string);
 	bool saveDictionary(std::string dic_string);
-	bool saveHistogram(std::string histo_string);
+	bool saveHistogram(std::string folderPath, std::string histo_string);
 
 };
