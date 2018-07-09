@@ -881,7 +881,7 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		if (i % 5 == 0)
 			display_dictionary(200,true);
 
-		
+		saveDictionary("temp_dic.xml");
 		//std::cout << "\r" <<"\t Start training\t : \t" << i <<  " / " <<nTotalLoop  << std::endl;
 	}
 
