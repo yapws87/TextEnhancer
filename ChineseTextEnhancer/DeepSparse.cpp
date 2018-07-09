@@ -299,7 +299,7 @@ float CDeepSparse::PatchCorrelation(cv::InputArray trainPatch, cv::InputArray di
 		return 0.0f;
 
 	cv::Mat matCor;
-	cv::matchTemplate(train_row, dic_row, matCor, cv::TM_CCORR_NORMED);
+	cv::matchTemplate(train_row, dic_row, matCor, cv::TM_CCORR);
 
 	//float temp = (matCor.at<float>(0) / (float)dic_row.cols);
 	float temp = (matCor.at<float>(0));// / (float)dic_row.cols);
@@ -612,7 +612,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 
 
 	tbb::mutex tbb_mutex;
-
+	cv::Mat matOnes = cv::Mat::ones(nFeatureSize, nFeatureSize, CV_32F);
 	// Loop through training patch
 	
 	tbb::parallel_for(tbb::blocked_range<size_t>(0, nHeight - nFeatureSize), [&](const tbb::blocked_range<size_t> &r){
@@ -634,8 +634,11 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 				cv::Mat matPatch;
 				matSrc(roi).copyTo(matPatch);
 
-				if (matPatch.at<float>(matPatch.cols * matPatch.rows / 2) < 0.1)
+				//if (matPatch.at<float>(matPatch.cols * matPatch.rows / 2) < 0.1)
+				//	continue;
+				if (cv::mean(matPatch)[0] < 0.01)
 					continue;
+
 				int nSparseIdx = 0;
 				cv::Mat matSparse = deconstruction(matPatch.reshape(1, 1), nMaxSparseCount, nSparseIdx);
 
@@ -647,7 +650,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 				tbb_mutex.lock();
 				insertHisto(nSparseIdx, matPatch);
 				matDst(roi) = (matDst(roi) + matReconstruct.reshape(1, nFeatureSize));
-				matDivisor(roi) = matDivisor(roi) + cv::Mat::ones(roi.height, roi.width, CV_32F);
+				matDivisor(roi) = matDivisor(roi) + matOnes;
 			
 				//cv::multiply(matReconstruct.reshape(1, nFeatureSize), matDst(roi), matDst(roi));
 				tbb_mutex.unlock();
