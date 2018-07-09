@@ -86,14 +86,14 @@ private:
 	//Matching pursuit
 	void MatchingPursuit(int nMaxSparseCount);
 	cv::Mat deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nSparseIndex);
-	bool findBestAtom(cv::Mat matPatch, int &_nBestDic, float &_fBestDicCorr);
+	bool findBestAtom(cv::InputArray matPatch, int &_nBestDic, float &_fBestDicCorr);
 
 	//Reconstruction
 	void reconstruct(cv::Mat matSrc, cv::Mat &matReconstructed, int nMaxSparseCount);
 
 	// Distance
 	float PatchDistance(const cv::Mat &trainPatch, const cv::Mat &dicPatch);
-	float PatchCorrelation(const cv::Mat &trainPatch, const cv::Mat &dicPatch);
+	float PatchCorrelation(cv::InputArray trainPatch, cv::InputArray dicPatch);
 	float PatchCorrelationCoef(const cv::Mat &trainPatch, const cv::Mat &dicPatch);
 	void K_SVD();
 

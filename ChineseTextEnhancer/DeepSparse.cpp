@@ -62,7 +62,7 @@ void CDeepSparse::SetFromPathDictionary(std::string dic_path, int nDicLength)
 	
 }
 
-bool CDeepSparse::findBestAtom(cv::Mat matPatch, int &_nBestDic, float &_fBestDicCorr )
+bool CDeepSparse::findBestAtom(cv::InputArray matPatch, int &_nBestDic, float &_fBestDicCorr )
 {
 	int nTotalDic = m_dictionary.rows;
 	float fMaxCorr = 0;
@@ -133,15 +133,15 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 		cv::subtract(matResidue, local_reconstruct, matLocalResidue);
 
 		// Display
-		cv::Mat matResidue_patch;
-		cv::Mat matLocalResidue_patch;
-		cv::Mat matReconstruct_patch;
-		cv::Mat matDic_patch;
+		//cv::Mat matResidue_patch;
+		//cv::Mat matLocalResidue_patch;
+		//cv::Mat matReconstruct_patch;
+		//cv::Mat matDic_patch;
 
-		matDic_patch = m_dictionary.row(nBestDic).reshape(1, m_featurePatchSize.width);
-		matReconstruct_patch = local_reconstruct.reshape(1, m_featurePatchSize.width);
-		matResidue_patch = matResidue.reshape(1, m_featurePatchSize.width);
-		matLocalResidue_patch = matLocalResidue.reshape(1, m_featurePatchSize.width);
+		//matDic_patch = m_dictionary.row(nBestDic).reshape(1, m_featurePatchSize.width);
+		//matReconstruct_patch = local_reconstruct.reshape(1, m_featurePatchSize.width);
+		//matResidue_patch = matResidue.reshape(1, m_featurePatchSize.width);
+		//matLocalResidue_patch = matLocalResidue.reshape(1, m_featurePatchSize.width);
 		
 		//Check Error
 		cv::Mat matResidue_2;
@@ -161,7 +161,7 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 			
 			// Check for repeated feature
 			bool bNewDic = true;
-			for (int i = 0; i < sparse_index.size(); i++)
+			for (int i = 0; i < sparse_index.size() && nSparseCount > 0; i++)
 			{
 				if (nBestDic  == sparse_index[i])
 					bNewDic = false;
@@ -200,8 +200,8 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 		sparse_vec.at<float> (sparse_index[i]) = newWeights.at<float>(i);
 	}
 
-	cv::Mat recons;
-	recons = matBestDics.t() * newWeights;
+	//cv::Mat recons;
+	//recons = matBestDics.t() * newWeights;
 
 
 	// Calculate sparse index
@@ -282,19 +282,19 @@ float CDeepSparse::PatchDistance(const cv::Mat & trainPatch, const cv::Mat & dic
 	return (float)sqrt(sSum.val[0]);
 }
 
-float CDeepSparse::PatchCorrelation(const cv::Mat & trainPatch, const cv::Mat & dicPatch)
+float CDeepSparse::PatchCorrelation(cv::InputArray trainPatch, cv::InputArray dicPatch)
 {
 	cv::Mat train_row;
 	cv::Mat dic_row;
 
-	trainPatch.copyTo(train_row);
-	dicPatch.copyTo(dic_row);
+	//trainPatch.copyTo(train_row);
+	//dicPatch.copyTo(dic_row);
 
-	train_row = trainPatch.reshape(1, 1);
-	dic_row = dicPatch.reshape(1, 1);
+	train_row = trainPatch.getMat().reshape(1, 1);
+	dic_row = dicPatch.getMat().reshape(1, 1);
 
 	//exceptions
-	if (trainPatch.cols != dicPatch.cols)
+	if (trainPatch.cols() != dicPatch.cols())
 		return 0.0f;
 
 	cv::Mat matCor;
