@@ -878,8 +878,9 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		cv::imshow("Error Img", matAbsDiffShow);
 		cv::waitKey(1);
 
-		if (i % 5 == 0)
-			display_dictionary(200,true);
+
+		//if (i % 5 == 0)
+		//	display_dictionary(200,true);
 
 		
 		//std::cout << "\r" <<"\t Start training\t : \t" << i <<  " / " <<nTotalLoop  << std::endl;

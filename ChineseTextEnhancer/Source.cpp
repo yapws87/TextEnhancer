@@ -125,6 +125,13 @@ void main(int argc, const char** argv)
 	// Load image from PC
 	cv::Mat matSrc_ori = cv::imread(image_path,0);
 	cv::Mat matSrc;
+
+	if (matSrc_ori.empty()) {
+		std::cout << "[ERROR] Unable to load source img : " << image_path << std::endl;
+		std::cout << "Make sure image path is correct. " << image_path << std::endl;
+	}
+		
+
 	if(m_srcROI.area() > 0)
 		matSrc_ori(m_srcROI).copyTo(matSrc);
 	else
@@ -140,15 +147,16 @@ void main(int argc, const char** argv)
 	//tx.blobDetection(matInverse);
 
 
-	std::cout << "\t Extracting data\t : \t";
+	std::cout << "\t Initializing data\t : \t" ;
 	cv::Mat matInverseLarge;
 	cv::resize(matInverse, matInverseLarge, cv::Size(0, 0), m_fSizeUp, m_fSizeUp);
 		
 	sc.SetParam(matInverseLarge, m_nDictionarySize, m_nStride, m_nFeaturePatch);
-
+	std::cout << "[DONE]" << std::endl;
 
 	if (bTrain)	{
 
+		std::cout << "\t Extracting data\t : \t" ;
 		sc.ExtractTrainData();
 		std::cout << "[DONE]" << std::endl;
 
