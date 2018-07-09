@@ -634,10 +634,10 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 				cv::Mat matPatch;
 				matSrc(roi).copyTo(matPatch);
 
-				//if (matPatch.at<float>(matPatch.cols * matPatch.rows / 2) < 0.1)
-				//	continue;
-				if (cv::mean(matPatch)[0] < 0.01)
+				if (matPatch.at<float>(matPatch.cols * matPatch.rows / 2) < 0.5)
 					continue;
+				//if (cv::mean(matPatch)[0] < 0.01)
+				//	continue;
 
 				int nSparseIdx = 0;
 				cv::Mat matSparse = deconstruction(matPatch.reshape(1, 1), nMaxSparseCount, nSparseIdx);
