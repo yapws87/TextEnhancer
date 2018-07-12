@@ -149,7 +149,7 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 		{
 			bestError = err;
 			sparse_vec.at<float>(nBestDic) += fBestCorr;
-			//matLocalResidue.copyTo(matResidue);
+			matLocalResidue.copyTo(matResidue);
 
 			
 			
@@ -167,7 +167,7 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 				sparse_index.push_back(nBestDic);
 			}
 			//cv::normalize(matLocalResidue, matResidue, 1.0, 0.0, cv::NORM_L2);
-			cv::normalize(matLocalResidue, matResidue, 0.0, 1.0, cv::NORM_MINMAX);
+			//cv::normalize(matLocalResidue, matResidue, 0.0, 1.0, cv::NORM_MINMAX);
 		}
 		//else
 		//	break;
@@ -658,9 +658,9 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 
 				// Build Mask
 				cv::Mat matMask;
-				cv::bitwise_and(matOnes, matReconstruct, matMask);
-				matMask = cv::abs(matMask);
-				cv::normalize(matMask, matMask, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+				cv::multiply(matReconstruct, matReconstruct, matMask);
+				matMask.convertTo(matMask, CV_8UC1, 255);
+				//cv::normalize(matMask, matMask, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 
 				tbb_mutex.lock();
 				insertHisto(nSparseIdx, matPatch);
@@ -680,7 +680,8 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 
 
 	cv::divide(matDst, matDivisor, matDst);
-	//cv::subtract(1, matDst, matDst);
+	
+	matDst.convertTo(matDst, CV_8UC1, 255);
 	cv::normalize(matDst, matReconstructed, 0, 255, cv::NORM_MINMAX,CV_8UC1);
 	//cv::normalize(matDst, matReconstructed, 255, 0, cv::NORM_L2, CV_8UC1);
 	cv::Mat matReconstSmall;
