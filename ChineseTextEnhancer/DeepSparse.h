@@ -90,6 +90,7 @@ private:
 	cv::Mat m_dictionary;
 	cv::Mat m_sparseData;
 	cv::Mat m_inputDataNorm;
+	cv::Mat m_testDataNorm;
 	cv::Mat m_inputData8Bit;
 
 	cv::Size m_featurePatchSize;
@@ -146,6 +147,9 @@ public:
 		matSrc.convertTo(m_inputDataNorm, CV_32F, 1 / 255.f);
 		matSrc.copyTo(m_inputData8Bit);
 		
+	}
+	void SetTestImage(const cv::Mat matSrc) {
+		matSrc.convertTo(m_testDataNorm, CV_32F, 1 / 255.f);
 	}
 	
 	void ExtractTrainData();

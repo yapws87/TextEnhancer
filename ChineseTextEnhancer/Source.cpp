@@ -71,6 +71,7 @@ void main(int argc, const char** argv)
 	int nArgIdx = 0;
 	std::string dst_folder = argv[++nArgIdx];
 	std::string image_path = argv[++nArgIdx];
+	std::string test_image_path = argv[++nArgIdx];
 	std::string dic_path = argv[++nArgIdx];
 	std::string result_path = argv[++nArgIdx];
 
@@ -92,6 +93,7 @@ void main(int argc, const char** argv)
 	std::cout << "********* PARAMETERS ********" << std::endl;
 	std::cout << "\t" << "dst_folder" << "\t: "<< dst_folder << std::endl;
 	std::cout << "\t" << "image_path" << "\t: " << image_path << std::endl;
+	std::cout << "\t" << "test_image_path" << "\t: " << test_image_path << std::endl;
 	std::cout << "\t" << "dic_path" << "\t: " << dic_path << std::endl;
 	std::cout << "\t" << "result_path" << "\t: " << result_path << std::endl;
 	std::cout << "\t" << "bTrain" << "\t\t: " << bTrain << std::endl;
@@ -124,11 +126,16 @@ void main(int argc, const char** argv)
 	
 	// Load image from PC
 	cv::Mat matSrc_ori = cv::imread(image_path,0);
-	cv::Mat matSrc;
+	cv::Mat  matTest = cv::imread(test_image_path, 0);
+	cv::Mat matSrc ;
 
 	if (matSrc_ori.empty()) {
 		std::cout << "[ERROR] Unable to load source img : " << image_path << std::endl;
 		std::cout << "Make sure image path is correct. " << image_path << std::endl;
+	}
+	if (matTest.empty()) {
+		std::cout << "[ERROR] Unable to load test img : " << test_image_path << std::endl;
+		std::cout << "Make sure test image path is correct. " << test_image_path << std::endl;
 	}
 		
 
@@ -143,15 +150,17 @@ void main(int argc, const char** argv)
 	// Load Data
 	cv::Mat matInverse;
 	cv::bitwise_not(matSrc, matInverse);
-
+	cv::bitwise_not(matTest, matTest);
 	//tx.blobDetection(matInverse);
 
 
 	std::cout << "\t Initializing data\t : \t" ;
 	cv::Mat matInverseLarge;
 	cv::resize(matInverse, matInverseLarge, cv::Size(0, 0), m_fSizeUp, m_fSizeUp);
+	cv::resize(matTest, matTest, cv::Size(0, 0), m_fSizeUp, m_fSizeUp);
 		
 	sc.SetParam(matInverseLarge, m_nDictionarySize, m_nStride, m_nFeaturePatch);
+	sc.SetTestImage(matTest);
 	std::cout << "[DONE]" << std::endl;
 
 	if (bTrain)	{

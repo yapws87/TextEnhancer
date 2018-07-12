@@ -610,7 +610,22 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	int nStride = 1;
 
 	cv::Mat matDst = cv::Mat::zeros(matSrc.rows, matSrc.cols, CV_32F);
-	cv::Mat matDivisor = cv::Mat::zeros(matSrc.rows, matSrc.cols, CV_32F);
+	cv::Mat matDivisor = cv::Mat::ones(matSrc.rows, matSrc.cols, CV_32F);
+
+	matSrc.copyTo(matDst);
+
+
+	// Make hole mask for inpainting
+	cv::Mat matMask, matThreshHigh, matThreshLow, matDilate;
+	cv::inRange(matSrc,  0.95, 1, matThreshHigh);
+	cv::inRange(matSrc, 0.2, 1, matThreshLow);
+	cv::dilate(matThreshLow, matDilate, cv::Mat(), cv::Point(-1, -1), 2);
+
+	cv::subtract(matDilate, matThreshHigh, matMask);
+
+
+
+
 
 
 	tbb::mutex tbb_mutex;
@@ -629,6 +644,10 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 				if (x % nStride != 0)
 					continue;
 
+
+				if (matDilate.at<uchar>(y, x) == 0)
+					continue;
+
 				// Extract Patchs
 				cv::Rect roi(x, y, nFeatureSize, nFeatureSize);
 
@@ -636,9 +655,9 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 				cv::Mat matPatch;
 				matSrc(roi).copyTo(matPatch);
 
-				if (matPatch.at<float>(matPatch.cols * matPatch.rows / 2) < 0.5)
-					continue;
-				//if (cv::mean(matPatch)[0] < 0.01)
+				//if (matPatch.at<float>(matPatch.cols * matPatch.rows / 2) > 0.5)
+				//	continue;
+				//if (cv::sum(matPatch)[0] == 0)
 				//	continue;
 
 				int nSparseIdx = 0;
@@ -672,6 +691,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	cv::Mat matReconstSmall;
 	cv::resize(matReconstructed, matReconstSmall, cv::Size(0, 0), 1, 1);
 	cv::imshow("reconstructed", matReconstSmall);
+	cv::imshow("matMask_", matMask);
 	cv::waitKey(1);
 	matReconstSmall.copyTo(matReconstructed);
 
@@ -879,14 +899,17 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		cv::Rect teaserRect(200, 200, 400, 300);
 		teaserRect = teaserRect & cv::Rect(0, 0, m_inputDataNorm.cols, m_inputDataNorm.rows);
 		dTime = cv::getTickCount();
-		reconstruct(m_inputDataNorm(teaserRect), matReconstructed,nMaxSparse);
+		reconstruct(m_testDataNorm(teaserRect), matReconstructed,nMaxSparse);
 		dTime = (cv::getTickCount() - dTime) / cv::getTickFrequency();
 		m_picom.printStdLog("\t Reconstruct Time :  \t" + std::to_string(dTime) + " sec");
 
 		// Find Error
+		cv::Mat matTest8U;
+		cv::normalize(m_testDataNorm, matTest8U, 0, 255, cv::NORM_MINMAX);
+		matTest8U.convertTo(matTest8U, CV_8UC1);
 		cv::Mat matAbsDiff, matAbsDiffShow;
-		cv::absdiff(m_inputData8Bit(teaserRect), matReconstructed, matAbsDiff);
-		int nNonZero = cv::countNonZero(m_inputData8Bit(teaserRect));
+		cv::absdiff(matTest8U(teaserRect), matReconstructed, matAbsDiff);
+		int nNonZero = cv::countNonZero(matTest8U(teaserRect));
 		
 		m_picom.printStdLog("\t Reconstruction Error :  \t" + std::to_string(cv::sum(matAbsDiff)[0] / (float)(nNonZero)) + " %");
 		cv::normalize(matAbsDiff, matAbsDiffShow, 0, 255, cv::NORM_MINMAX, CV_8UC1);
