@@ -133,16 +133,6 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 		cv::Mat matLocalResidue;
 		cv::subtract(matResidue, local_reconstruct, matLocalResidue);
 
-		// Display
-		//cv::Mat matResidue_patch;
-		//cv::Mat matLocalResidue_patch;
-		//cv::Mat matReconstruct_patch;
-		//cv::Mat matDic_patch;
-
-		//matDic_patch = m_dictionary.row(nBestDic).reshape(1, m_featurePatchSize.width);
-		//matReconstruct_patch = local_reconstruct.reshape(1, m_featurePatchSize.width);
-		//matResidue_patch = matResidue.reshape(1, m_featurePatchSize.width);
-		//matLocalResidue_patch = matLocalResidue.reshape(1, m_featurePatchSize.width);
 		
 		//Check Error
 		cv::Mat matResidue_2;
@@ -156,7 +146,7 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 		{
 			bestError = err;
 			sparse_vec.at<float>(nBestDic) += fBestCorr;
-			matLocalResidue.copyTo(matResidue);
+			//matLocalResidue.copyTo(matResidue);
 
 			
 			
@@ -668,16 +658,16 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 				matReconstruct = matReconstruct.reshape(1, nFeatureSize);
 
 				// Build Mask
-				cv::Mat matMask;
-				cv::bitwise_and(matOnes, matReconstruct, matMask);
-				matMask = cv::abs(matMask);
-				cv::normalize(matMask, matMask, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+				//cv::Mat matMask;
+				//cv::bitwise_and(matOnes, matReconstruct, matMask);
+				//matMask = cv::abs(matMask);
+				//cv::normalize(matMask, matMask, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 
 				tbb_mutex.lock();
 				insertHisto(nSparseIdx, matPatch);
 				
 				matDst(roi) = matDst(roi) + matReconstruct;			
-				cv::add(matDivisor(roi),matDivisor(roi),matOnes, matMask);
+				cv::add(matDivisor(roi),matDivisor(roi),matOnes);
 			
 				//cv::multiply(matReconstruct.reshape(1, nFeatureSize), matDst(roi), matDst(roi));
 				tbb_mutex.unlock();
@@ -705,6 +695,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 
 void CDeepSparse::SetDictionary(cv::Mat matDic)
 {
+	matDic.copyTo(m_dictionary);
 }
 
 void CDeepSparse::display_dictionary(int nWaitKey,bool bSave)
@@ -931,7 +922,7 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		if (dic_error < 0.0001)
 		{
 			std::cout << "Inter-dic Error : " << dic_error << std::endl;
-			break;
+			//break;
 		}
 		
 		//std::cout << "\r" <<"\t Start training\t : \t" << i <<  " / " <<nTotalLoop  << std::endl;
