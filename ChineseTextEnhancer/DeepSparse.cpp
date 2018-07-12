@@ -174,7 +174,7 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 				sparse_index.push_back(nBestDic);
 			}
 			//cv::normalize(matLocalResidue, matResidue, 1.0, 0.0, cv::NORM_L2);
-			//cv::normalize(matLocalResidue, matResidue, 0.0, 1.0, cv::NORM_MINMAX);
+			cv::normalize(matLocalResidue, matResidue, 0.0, 1.0, cv::NORM_MINMAX);
 		}
 		//else
 		//	break;
@@ -665,13 +665,19 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 
 				// Reconstruct
 				cv::Mat matReconstruct = matSparse * m_dictionary;
+				matReconstruct = matReconstruct.reshape(1, nFeatureSize);
 
-			
-				
+				// Build Mask
+				cv::Mat matMask;
+				cv::bitwise_and(matOnes, matReconstruct, matMask);
+				matMask = cv::abs(matMask);
+				cv::normalize(matMask, matMask, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+
 				tbb_mutex.lock();
 				insertHisto(nSparseIdx, matPatch);
-				matDst(roi) = (matDst(roi) + matReconstruct.reshape(1, nFeatureSize));
-				matDivisor(roi) = matDivisor(roi) + matOnes;
+				
+				matDst(roi) = matDst(roi) + matReconstruct;			
+				cv::add(matDivisor(roi),matDivisor(roi),matOnes, matMask);
 			
 				//cv::multiply(matReconstruct.reshape(1, nFeatureSize), matDst(roi), matDst(roi));
 				tbb_mutex.unlock();
