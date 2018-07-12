@@ -122,7 +122,7 @@ private:
 	float PatchDistance(const cv::Mat &trainPatch, const cv::Mat &dicPatch);
 	float PatchCorrelation(cv::InputArray trainPatch, cv::InputArray dicPatch);
 	float PatchCorrelationCoef(const cv::Mat &trainPatch, const cv::Mat &dicPatch);
-	void K_SVD();
+	void K_SVD(cv::OutputArray matDictionary);
 
 	void display_dictionary(int nWaitKey, bool bSave = false);
 

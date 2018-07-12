@@ -348,10 +348,12 @@ float CDeepSparse::PatchCorrelationCoef(const cv::Mat & trainPatch, const cv::Ma
 	return (float)(sSumCor.val[0] / dDivisor);
 }
 
-void CDeepSparse::K_SVD()
+void CDeepSparse::K_SVD(cv::OutputArray _matDictionary)
 {
 	int nTotalTrain = m_trainData.rows;
 	int nTotalDic = m_dictionary.rows;
+	_matDictionary.create(m_dictionary.size(), m_dictionary.type());
+	cv::Mat matDictionary = _matDictionary.getMat();
 	//m_trainData
 	//m_sparseData;
 	tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalDic), [&](const tbb::blocked_range<size_t> &r)	{
@@ -415,7 +417,7 @@ void CDeepSparse::K_SVD()
 			
 
 
-			newDic.copyTo(m_dictionary.row(din));
+			newDic.copyTo(matDictionary.row(din));
 		}
 	});
 }
@@ -850,7 +852,17 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		m_picom.printStdLog("\t MatchingPursuit Time :  \t" + std::to_string(dTime) + " sec");
 		
 		dTime = cv::getTickCount();
-		K_SVD();
+		cv::Mat matNewDictionary;
+		K_SVD(matNewDictionary);
+
+		// Calculates error of dic
+		cv::Mat dicDiff;
+		cv::absdiff(matNewDictionary, m_dictionary, dicDiff);
+		double dic_error = cv::mean(dicDiff)[0];
+
+		// Update new dictionary
+		matNewDictionary.copyTo(m_dictionary);
+
 		dTime = (cv::getTickCount() - dTime) / cv::getTickFrequency();
 		m_picom.printStdLog("\t K_SVD Time :  \t" + std::to_string(dTime) + " sec");
 		
@@ -881,11 +893,14 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		cv::imshow("Error Img", matAbsDiffShow);
 		cv::waitKey(1);
 
-
 		//if (i % 5 == 0)
 		//	display_dictionary(200,true);
 
 		saveDictionary("temp_dic.xml");
+
+		// no Changes in dictionary
+		if (dic_error < 0.0000000001)
+			break;
 		//std::cout << "\r" <<"\t Start training\t : \t" << i <<  " / " <<nTotalLoop  << std::endl;
 	}
 
