@@ -41,12 +41,15 @@ void CDeepSparse::SetFromPathDictionary(std::string dic_path, int nDicLength)
 	int nTotalElement = m_trainData.rows;
 
 	loadDictionary(dic_path);
+
+	if (m_dictionary.cols != m_featurePatchSize.area())
+		m_dictionary = cv::Mat();
 	
 	if (m_dictionary.rows < nDicLength)
 	{
 		int nIdx;
 		SetRandomRange(0, nTotalElement);
-		for (int rin = m_dictionary.rows - 1; rin < nDicLength; rin++)
+		for (int rin = m_dictionary.rows; rin < nDicLength; rin++)
 		{
 			// Get non-repeat random value
 			nIdx = GetRandomIndex_nonRepeat();
@@ -614,10 +617,6 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	cv::subtract(matDilate, matThreshHigh, matMask);
 
 
-
-
-
-
 	tbb::mutex tbb_mutex;
 	cv::Mat matOnes = cv::Mat::ones(nFeatureSize, nFeatureSize, CV_32F);
 	// Loop through training patch
@@ -658,16 +657,16 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 				matReconstruct = matReconstruct.reshape(1, nFeatureSize);
 
 				// Build Mask
-				//cv::Mat matMask;
-				//cv::bitwise_and(matOnes, matReconstruct, matMask);
-				//matMask = cv::abs(matMask);
-				//cv::normalize(matMask, matMask, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+				cv::Mat matMask;
+				cv::bitwise_and(matOnes, matReconstruct, matMask);
+				matMask = cv::abs(matMask);
+				cv::normalize(matMask, matMask, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 
 				tbb_mutex.lock();
 				insertHisto(nSparseIdx, matPatch);
 				
 				matDst(roi) = matDst(roi) + matReconstruct;			
-				cv::add(matDivisor(roi),matDivisor(roi),matOnes);
+				cv::add(matDivisor(roi), matOnes,matDivisor(roi), matMask);
 			
 				//cv::multiply(matReconstruct.reshape(1, nFeatureSize), matDst(roi), matDst(roi));
 				tbb_mutex.unlock();
