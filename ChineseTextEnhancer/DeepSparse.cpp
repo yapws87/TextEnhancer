@@ -928,8 +928,12 @@ void CDeepSparse::Train(int nTotalLoop, int nMaxSparse)
 		saveDictionary("temp_dic.xml");
 
 		// no Changes in dictionary
-		if (dic_error < 0.0000000001)
+		if (dic_error < 0.0001)
+		{
+			std::cout << "Inter-dic Error : " << dic_error << std::endl;
 			break;
+		}
+		
 		//std::cout << "\r" <<"\t Start training\t : \t" << i <<  " / " <<nTotalLoop  << std::endl;
 	}
 
