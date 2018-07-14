@@ -695,15 +695,19 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	cv::bitwise_not(matMask, matMaskInv);
 	matDst.setTo(0, matMaskInv);
 
-	cv::Mat matHoles, matNonHoles;
-	cv::subtract(matSrc, matDst, matHoles);
-	matHoles.convertTo(matHoles, CV_8UC1, 10000000);
+	cv::Mat matSureMask, matUnsureMask;
+	cv::subtract(matSrc, matDst, matSureMask);
+	cv::inRange(matSureMask, 0.000001, 1, matSureMask);
+	matSureMask.convertTo(matSureMask, CV_8UC1,255);
 
-	cv::bitwise_not(matHoles, matNonHoles);
+	cv::bitwise_not(matSureMask, matUnsureMask);
 
+	cv::Mat matCombineMask;
+	cv::multiply(matMask, matSureMask,matCombineMask);
 	matReconstructed = cv::Mat::zeros(matSrc.size(), matSrc.type());
-	cv::add(matSrc, matReconstructed, matReconstructed, matHoles);
-	cv::add(matSrc*0.5, matDst*0.5, matReconstructed, matNonHoles);
+	cv::add(matDst, matReconstructed, matReconstructed, matUnsureMask);
+	cv::add(matSrc , matReconstructed, matReconstructed, matSureMask);
+	cv::add(matSrc*0.5, matDst*0.5, matReconstructed, matCombineMask);
 
 	matReconstructed.convertTo(matReconstructed, CV_8UC1, 255);
 	cv::normalize(matReconstructed, matReconstructed, 0, 255, cv::NORM_MINMAX,CV_8UC1);
