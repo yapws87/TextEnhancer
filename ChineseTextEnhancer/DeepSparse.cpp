@@ -167,7 +167,17 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 				sparse_index.push_back(nBestDic);
 			}
 			//cv::normalize(matLocalResidue, matResidue, 1.0, 0.0, cv::NORM_L2);
+			cv::Mat m_residue = matResidue.reshape(1, m_featurePatchSize.width);
+			cv::Mat m_reconst = local_reconstruct.reshape(1, m_featurePatchSize.width);
+
+				
+			//cv::normalize(matLocalResidue, matResidue, 1.0, 0.0, cv::NORM_L2);
+			// Min max norm will remove negative values, so avoid using it.
 			//cv::normalize(matLocalResidue, matResidue, 0.0, 1.0, cv::NORM_MINMAX);
+
+			
+
+
 		}
 		//else
 		//	break;
@@ -603,9 +613,9 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	int nStride = 1;
 
 	cv::Mat matDst = cv::Mat::zeros(matSrc.rows, matSrc.cols, CV_32F);
-	cv::Mat matDivisor = cv::Mat::ones(matSrc.rows, matSrc.cols, CV_32F);
+	cv::Mat matDivisor = cv::Mat::zeros(matSrc.rows, matSrc.cols, CV_32F);
 
-	matSrc.copyTo(matDst);
+	//matSrc.copyTo(matDst);
 
 
 	// Make hole mask for inpainting
@@ -681,8 +691,23 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 
 	cv::divide(matDst, matDivisor, matDst);
 	
-	matDst.convertTo(matDst, CV_8UC1, 255);
-	cv::normalize(matDst, matReconstructed, 0, 255, cv::NORM_MINMAX,CV_8UC1);
+	cv::Mat matMaskInv;
+	cv::bitwise_not(matMask, matMaskInv);
+	matDst.setTo(0, matMaskInv);
+
+	cv::Mat matHoles, matNonHoles;
+	cv::subtract(matSrc, matDst, matHoles);
+	matHoles.convertTo(matHoles, CV_8UC1, 10000000);
+
+	cv::bitwise_not(matHoles, matNonHoles);
+
+	matReconstructed = cv::Mat::zeros(matSrc.size(), matSrc.type());
+	cv::add(matSrc, matReconstructed, matReconstructed, matHoles);
+	cv::add(matSrc*0.5, matDst*0.5, matReconstructed, matNonHoles);
+
+	matReconstructed.convertTo(matReconstructed, CV_8UC1, 255);
+	cv::normalize(matReconstructed, matReconstructed, 0, 255, cv::NORM_MINMAX,CV_8UC1);
+	
 	//cv::normalize(matDst, matReconstructed, 255, 0, cv::NORM_L2, CV_8UC1);
 	cv::Mat matReconstSmall;
 	cv::resize(matReconstructed, matReconstSmall, cv::Size(0, 0), 1, 1);
