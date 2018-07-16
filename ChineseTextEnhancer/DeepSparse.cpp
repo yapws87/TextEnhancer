@@ -538,7 +538,7 @@ void CDeepSparse::ExtractTrainData()
 					normTrainImage(matROI).copyTo(matPatch);
 
 
-					if (matPatch.at<float>(matPatch.cols * matPatch.rows / 2) > 0.1) {
+					if (cv::mean(matPatch)[0] > 0.1) {
 						tbb_mutex.lock();
 						//omp_lock.Lock();
 						cv::normalize(matPatch, matPatch, 1.f, 0.f, cv::NORM_L2);
