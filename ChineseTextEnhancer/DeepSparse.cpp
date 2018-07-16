@@ -233,6 +233,7 @@ void CDeepSparse::MatchingPursuit(int nMaxSparseCount)
 
 	tbb::mutex tbb_mutex;
 
+
 	// Loop through training patch
 #ifndef _DEBUG 	
 	tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalPatch), [&](const tbb::blocked_range<size_t> &r){
@@ -588,8 +589,77 @@ void CDeepSparse::ExtractTrainData()
 		
 		
 	}
+
+	cv::Mat vec_flag = cv::Mat::zeros(matPatches.rows, 1, CV_32F);
+	//for (int i = 0; i < matPatches.rows; i++)
+	//	vec_flag.at<float>(i) = i;
+
+
+	//Remove Similar Data
+	int nCountLocal = 0;
+	tbb::parallel_for(tbb::blocked_range<size_t>(0, matPatches.rows), [&](const tbb::blocked_range<size_t> &r) {
+		for (int outter = (int)r.begin(); outter != (int)r.end(); outter++)
+		{
+			cv::Mat matResult;
+			if (vec_flag.at<float>(outter) == -1)
+				continue;
+
+			for (int inner = 0; inner != matPatches.rows; inner++)
+			{
+
+				if (outter == inner)
+					continue;
+				if (vec_flag.at<float>(inner) == 1)
+					continue;
+
+				if (vec_flag.at<float>(inner) == -1  )
+					continue;
+
+				
+				
+				//cv::matchTemplate(matPatches.row(inner), matPatches.row(outter), matResult, cv::TM_CCORR_NORMED);
+				cv::subtract(matPatches.row(inner), matPatches.row(outter), matResult);
+				
+
+			
+				//if (matResult.at<float>(0) > 0.999)
+				
+				if (cv::countNonZero(matResult) == 0) {
+					tbb_mutex.lock();
+					vec_flag.at<float>(inner) = -1;
+					tbb_mutex.unlock();
+				}
+				
+			}
+
+			tbb_mutex.lock();
+			if (nCountLocal % 10 == 0)
+			{
+				std::cout << "\r" << "\t Extracting data 3\t : \t" << std::setprecision(3) << (nCountLocal) / (float)(matPatches.rows) * 100 << "%";
+
+			}
+			nCountLocal++;
+			vec_flag.at<float>(outter) = 1;
+			tbb_mutex.unlock();
+
+		}		
+	});
+
+	cv::Mat trimedPatches;
+	int currentPatchIdx = -1;
+	for (int i = 0; i < matPatches.rows; i++)
+	{
+		if (vec_flag.at<float>(i) > 0)
+		{
+			trimedPatches.push_back(matPatches.row(i));
+		}
+	}
+
+
+
+
 	// Transfer data
-	matPatches.copyTo(m_trainData);
+	trimedPatches.copyTo(m_trainData);
 	std::cout << "\r" << "\t Extracting data\t : \t" << std::setprecision(3) << "100 %";
 }
 
