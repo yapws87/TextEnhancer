@@ -2,6 +2,10 @@
 #include <time.h>
 #include <direct.h>
 
+
+
+
+
 void CDeepSparse::SetRandomDictionary(int nDicLength)
 {
 	if (m_trainData.empty()) {
@@ -170,14 +174,8 @@ cv::Mat CDeepSparse::deconstruction(cv::Mat matSrc, int nMaxSparseCount, int &nS
 			cv::Mat m_residue = matResidue.reshape(1, m_featurePatchSize.width);
 			cv::Mat m_reconst = local_reconstruct.reshape(1, m_featurePatchSize.width);
 
-				
-			//cv::normalize(matLocalResidue, matResidue, 1.0, 0.0, cv::NORM_L2);
 			// Min max norm will remove negative values, so avoid using it.
 			//cv::normalize(matLocalResidue, matResidue, 0.0, 1.0, cv::NORM_MINMAX);
-
-			
-
-
 		}
 		//else
 		//	break;
@@ -233,12 +231,14 @@ void CDeepSparse::MatchingPursuit(int nMaxSparseCount)
 
 	m_sparseData = cv::Mat::zeros(nTotalPatch, nTotalDic, CV_32F);
 
-	//tbb::mutex tbb_mutex;
+	tbb::mutex tbb_mutex;
 
 	// Loop through training patch
 #ifndef _DEBUG 	
 	tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalPatch), [&](const tbb::blocked_range<size_t> &r){
 		for (int pin = (int)r.begin(); pin != (int)r.end(); pin++)
+//#pragma omp parallel for
+//			for (int pin = 0; pin < nTotalPatch; pin++)
 #else
 		for (int pin = 0; pin < nTotalPatch; pin++)
 #endif
@@ -362,7 +362,8 @@ void CDeepSparse::K_SVD(cv::OutputArray _matDictionary)
 	tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalDic), [&](const tbb::blocked_range<size_t> &r)	{
 		// For every atom of dictionary
 		for (int din = (int)r.begin(); din != (int)r.end(); din++)
-		//for (int din = 0; din < nTotalDic; din++)
+//#pragma omp parallel for
+	for (int din = 0; din < nTotalDic; din++)
 		{
 			// Obtain related train data
 			cv::Mat relatedTrain;
@@ -513,7 +514,7 @@ void CDeepSparse::ExtractTrainData()
 	int nCountProgress = 0;
 	// Loop through training patch
 	float fSizeMultiplier[] = { 0.5, 1.0, 1.5 };
-
+//#pragma omp parallel for
 	for (int nSize = 0; nSize < 3; nSize++)
 	{
 		cv::resize(normTrainImage, normTrainImage, cv::Size(0, 0), fSizeMultiplier[nSize], fSizeMultiplier[nSize]);
@@ -522,7 +523,8 @@ void CDeepSparse::ExtractTrainData()
 	
 		tbb::parallel_for(tbb::blocked_range<size_t>(0, nTotalY), [&](const tbb::blocked_range<size_t> &r){
 			for (int y = (int)r.begin(); y != (int)r.end(); y++)
-			//for (int y = 0; y <nTotalY; y+= nStride)
+//#pragma omp parallel for
+//		for (int y = 0; y <nTotalY; y+= nStride)
 			{
 				if (y % nStride != 0)
 					continue;
@@ -538,6 +540,7 @@ void CDeepSparse::ExtractTrainData()
 
 					if (matPatch.at<float>(matPatch.cols * matPatch.rows / 2) > 0.1) {
 						tbb_mutex.lock();
+						//omp_lock.Lock();
 						cv::normalize(matPatch, matPatch, 1.f, 0.f, cv::NORM_L2);
 						//cv::normalize(matPatch, matPatch, 0, 1, cv::NORM_MINMAX);
 						matPatches.push_back(matPatch.reshape(1, 1));
@@ -548,7 +551,7 @@ void CDeepSparse::ExtractTrainData()
 						}
 						nCountProgress++;
 						tbb_mutex.unlock();
-
+						//omp_lock.Unlock();
 						
 					}
 
@@ -633,7 +636,8 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	
 	tbb::parallel_for(tbb::blocked_range<size_t>(0, nHeight - nFeatureSize), [&](const tbb::blocked_range<size_t> &r){
 		for (int y = (int)r.begin(); y != (int)r.end(); y ++)
-		//for (int y = 0; y < nHeight - nFeatureSize; y++)
+//#pragma omp parallel for
+//		for (int y = 0; y < nHeight - nFeatureSize; y++)
 		{
 			if (y % nStride != 0)
 				continue;
@@ -673,6 +677,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 				//cv::normalize(matMask, matMask, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 
 				tbb_mutex.lock();
+				//omp_lock.Lock(); 
 				insertHisto(nSparseIdx, matPatch);
 				
 				matDst(roi) = matDst(roi) + matReconstruct;			
@@ -680,6 +685,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 			
 				//cv::multiply(matReconstruct.reshape(1, nFeatureSize), matDst(roi), matDst(roi));
 				tbb_mutex.unlock();
+				//omp_lock.Unlock(); 
 
 			}
 		}
@@ -707,7 +713,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	matReconstructed = cv::Mat::zeros(matSrc.size(), matSrc.type());
 	cv::add(matDst, matReconstructed, matReconstructed, matUnsureMask);
 	cv::add(matSrc , matReconstructed, matReconstructed, matSureMask);
-	cv::add(matSrc*0.5, matDst*0.5, matReconstructed, matCombineMask);
+	//cv::add(matSrc*0.5, matDst*0.5, matReconstructed, matCombineMask);
 
 	matReconstructed.convertTo(matReconstructed, CV_8UC1, 255);
 	cv::normalize(matReconstructed, matReconstructed, 0, 255, cv::NORM_MINMAX,CV_8UC1);
@@ -1059,5 +1065,3 @@ bool CDeepSparse::saveHistogram(std::string folderPath, std::string histo_string
 	return bPass_flag;
 	
 }
-
-

@@ -8,7 +8,9 @@
 #include "tbb/parallel_for.h"
 #include "tbb/blocked_range.h"
 
-
+#ifdef _OPENMP
+# include <omp.h>
+#endif
 
 struct SparseHisto {
 	cv::Mat data;
@@ -83,6 +85,31 @@ struct SparseHisto {
 	}
 
 };
+
+
+#ifdef _OPENMP
+struct MutexType
+{
+	MutexType() { omp_init_lock(&omplock); }
+	~MutexType() { omp_destroy_lock(&omplock); }
+	void Lock() { omp_set_lock(&omplock); }
+	void Unlock() { omp_unset_lock(&omplock); }
+
+	MutexType(const MutexType&) { omp_init_lock(&omplock); }
+	MutexType& operator= (const MutexType&) { return *this; }
+public:
+	omp_lock_t omplock;
+};
+#else
+/* A dummy mutex that doesn't actually exclude anything,
+* but as there is no parallelism either, no worries. */
+struct MutexType
+{
+	void Lock() {}
+	void Unlock() {}
+};
+#endif
+
 class CDeepSparse
 {
 private:
@@ -169,4 +196,26 @@ public:
 	bool saveDictionary(std::string dic_string);
 	bool saveHistogram(std::string folderPath, std::string histo_string);
 
+
+
+	MutexType omp_lock;
+
+
 };
+
+
+
+/* An exception-safe scoped lock-keeper. */
+//struct ScopedLock
+//{
+//	explicit ScopedLock(MutexType& m) : mut(m), locked(true) { mut.Lock(); }
+//	~ScopedLock() { Unlock(); }
+//	void Unlock() { if (!locked) return; locked = false; mut.Unlock(); }
+//	void LockAgain() { if (locked) return; mut.Lock(); locked = true; }
+//private:
+//	MutexType& mut;
+//	bool locked;
+//private: // prevent copying the scoped lock.
+//	void operator=(const ScopedLock&);
+//	ScopedLock(const ScopedLock&);
+//};
