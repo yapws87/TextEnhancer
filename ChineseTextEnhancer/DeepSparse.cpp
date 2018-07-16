@@ -536,7 +536,7 @@ void CDeepSparse::ExtractTrainData()
 					normTrainImage(matROI).copyTo(matPatch);
 
 
-					if (matPatch.at<float>(matPatch.cols * matPatch.rows / 2) > 0.1) {
+					if (cv::mean(matPatch)[0] > 0.1) {
 						tbb_mutex.lock();
 						cv::normalize(matPatch, matPatch, 1.f, 0.f, cv::NORM_L2);
 						//cv::normalize(matPatch, matPatch, 0, 1, cv::NORM_MINMAX);
@@ -707,7 +707,7 @@ void CDeepSparse::reconstruct(cv::Mat _matSrc, cv::Mat &matReconstructed, int nM
 	matReconstructed = cv::Mat::zeros(matSrc.size(), matSrc.type());
 	cv::add(matDst, matReconstructed, matReconstructed, matUnsureMask);
 	cv::add(matSrc , matReconstructed, matReconstructed, matSureMask);
-	cv::add(matSrc*0.5, matDst*0.5, matReconstructed, matCombineMask);
+	//cv::add(matSrc*0.5, matDst*0.5, matReconstructed, matCombineMask);
 
 	matReconstructed.convertTo(matReconstructed, CV_8UC1, 255);
 	cv::normalize(matReconstructed, matReconstructed, 0, 255, cv::NORM_MINMAX,CV_8UC1);
