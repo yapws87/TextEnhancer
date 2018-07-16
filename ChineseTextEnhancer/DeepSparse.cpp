@@ -363,7 +363,7 @@ void CDeepSparse::K_SVD(cv::OutputArray _matDictionary)
 		// For every atom of dictionary
 		for (int din = (int)r.begin(); din != (int)r.end(); din++)
 //#pragma omp parallel for
-	for (int din = 0; din < nTotalDic; din++)
+	//for (int din = 0; din < nTotalDic; din++)
 		{
 			// Obtain related train data
 			cv::Mat relatedTrain;
