@@ -514,7 +514,7 @@ void CDeepSparse::ExtractTrainData()
 
 	int nCountProgress = 0;
 	// Loop through training patch
-	float fSizeMultiplier[] = { 0.5, 1.0, 1.5 };
+	float fSizeMultiplier[] = {  0.9, 1.0, 1.2 };
 //#pragma omp parallel for
 	for (int nSize = 0; nSize < 3; nSize++)
 	{
